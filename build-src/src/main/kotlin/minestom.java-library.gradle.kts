@@ -44,30 +44,30 @@ tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }
 
-//tasks.withType<Javadoc> {
-//    (options as? StandardJavadocDocletOptions)?.apply {
-//        encoding = "UTF-8"
-//
-//        // Custom options
-//        addBooleanOption("html5", true)
-//        addStringOption("-release", javaVersion)
-//        // Links to external javadocs
-//        links("https://docs.oracle.com/en/java/javase/$javaVersion/docs/api/")
-//        if (!adventureVersion.endsWith("-SNAPSHOT")) {
-//            links("https://jd.advntr.dev/api/${libs.versions.adventure.get()}/")
-//            links("https://jd.advntr.dev/nbt/${libs.versions.adventure.get()}/")
-//            links("https://jd.advntr.dev/key/${libs.versions.adventure.get()}/")
-//            links("https://jd.advntr.dev/text-serializer-ansi/${libs.versions.adventure.get()}/")
-//            links("https://jd.advntr.dev/text-serializer-gson/${libs.versions.adventure.get()}/")
-//            links("https://jd.advntr.dev/text-serializer-legacy/${libs.versions.adventure.get()}/")
-//            links("https://jd.advntr.dev/text-serializer-plain/${libs.versions.adventure.get()}/")
-//        }
-//        links("https://javadoc.io/doc/com.google.code.gson/gson/${libs.versions.gson.get()}/")
-//        links("https://javadoc.io/doc/org.jetbrains/annotations/${libs.versions.jetbrainsAnnotations.get()}/")
-//
-//        tags("apiNote:a:API Note:", "implSpec:a:Implementation Requirements:", "implNote:a:Implementation Note:")
-//    }
-//}
+tasks.withType<Javadoc> {
+    (options as? StandardJavadocDocletOptions)?.apply {
+        encoding = "UTF-8"
+
+        // Custom options
+        addBooleanOption("html5", true)
+        addStringOption("-release", javaVersion)
+        // Links to external javadocs
+        links("https://docs.oracle.com/en/java/javase/$javaVersion/docs/api/")
+        if (!adventureVersion.endsWith("-SNAPSHOT")) {
+            links("https://jd.advntr.dev/api/${libs.versions.adventure.get()}/")
+            links("https://jd.advntr.dev/nbt/${libs.versions.adventure.get()}/")
+            links("https://jd.advntr.dev/key/${libs.versions.adventure.get()}/")
+            links("https://jd.advntr.dev/text-serializer-ansi/${libs.versions.adventure.get()}/")
+            links("https://jd.advntr.dev/text-serializer-gson/${libs.versions.adventure.get()}/")
+            links("https://jd.advntr.dev/text-serializer-legacy/${libs.versions.adventure.get()}/")
+            links("https://jd.advntr.dev/text-serializer-plain/${libs.versions.adventure.get()}/")
+        }
+        links("https://javadoc.io/doc/com.google.code.gson/gson/${libs.versions.gson.get()}/")
+        links("https://javadoc.io/doc/org.jetbrains/annotations/${libs.versions.jetbrainsAnnotations.get()}/")
+
+        tags("apiNote:a:API Note:", "implSpec:a:Implementation Requirements:", "implNote:a:Implementation Note:")
+    }
+}
 
 tasks.withType<Test> {
     useJUnitPlatform()
