@@ -49,7 +49,7 @@ public final class Metadata {
         return new MetadataImpl.EntryImpl<>(TYPE_CHAT, value, NetworkBuffer.COMPONENT);
     }
 
-    public static Entry<Component> OptComponent(@Nullable Component value) {
+    public static Entry<@Nullable Component> OptComponent(@Nullable Component value) {
         return new MetadataImpl.EntryImpl<>(TYPE_OPT_CHAT, value, NetworkBuffer.OPT_CHAT);
     }
 
@@ -69,7 +69,7 @@ public final class Metadata {
         return new MetadataImpl.EntryImpl<>(TYPE_BLOCK_POSITION, value, NetworkBuffer.BLOCK_POSITION);
     }
 
-    public static Entry<Point> OptBlockPosition(@Nullable Point value) {
+    public static Entry<@Nullable Point> OptBlockPosition(@Nullable Point value) {
         return new MetadataImpl.EntryImpl<>(TYPE_OPT_BLOCK_POSITION, value, NetworkBuffer.OPT_BLOCK_POSITION);
     }
 
@@ -77,7 +77,7 @@ public final class Metadata {
         return new MetadataImpl.EntryImpl<>(TYPE_DIRECTION, value, NetworkBuffer.DIRECTION);
     }
 
-    public static Entry<UUID> OptUUID(@Nullable UUID value) {
+    public static Entry<@Nullable UUID> OptUUID(@Nullable UUID value) {
         return new MetadataImpl.EntryImpl<>(TYPE_OPT_UUID, value, NetworkBuffer.UUID.optional());
     }
 
@@ -85,8 +85,8 @@ public final class Metadata {
         return new MetadataImpl.EntryImpl<>(TYPE_BLOCKSTATE, value, Block.STATE_NETWORK_TYPE);
     }
 
-    public static Entry<Block> OptBlockState(@Nullable Block value) {
-        return new MetadataImpl.EntryImpl<>(TYPE_OPT_BLOCKSTATE, value, new NetworkBuffer.Type<>() {
+    public static Entry<@Nullable Block> OptBlockState(@Nullable Block value) {
+        return new MetadataImpl.EntryImpl<>(TYPE_OPT_BLOCKSTATE, value, new NetworkBuffer.Type<>() { //OPT_VAR_INT
             @Override
             public void write(NetworkBuffer buffer, @Nullable Block value) {
                 buffer.write(NetworkBuffer.VAR_INT, value == null ? 0 : value.id());
@@ -112,19 +112,8 @@ public final class Metadata {
         return new MetadataImpl.EntryImpl<>(TYPE_VILLAGERDATA, data, VillagerMeta.VillagerData.NETWORK_TYPE);
     }
 
-    public static Entry<Integer> OptVarInt(@Nullable Integer value) {
-        return new MetadataImpl.EntryImpl<>(TYPE_OPT_VARINT, value, new NetworkBuffer.Type<>() {
-            @Override
-            public void write(NetworkBuffer buffer, Integer value) {
-                buffer.write(NetworkBuffer.VAR_INT, value == null ? 0 : value + 1);
-            }
-
-            @Override
-            public Integer read(NetworkBuffer buffer) {
-                int value = buffer.read(NetworkBuffer.VAR_INT);
-                return value == 0 ? null : value - 1;
-            }
-        });
+    public static Entry<@Nullable Integer> OptVarInt(@Nullable Integer value) {
+        return new MetadataImpl.EntryImpl<>(TYPE_OPT_VARINT, value, NetworkBuffer.OPTIONAL_VAR_INT);
     }
 
     public static Entry<EntityPose> Pose(EntityPose value) {
@@ -159,6 +148,10 @@ public final class Metadata {
         return new MetadataImpl.EntryImpl<>(TYPE_CHICKEN_VARIANT, value, ChickenVariant.NETWORK_TYPE);
     }
 
+    public static Entry<RegistryKey<ZombieNautilusVariant>> ZombieNautilusVariant(RegistryKey<ZombieNautilusVariant> value) {
+        return new MetadataImpl.EntryImpl<>(TYPE_ZOMBIE_NAUTILUS_VARIANT, value, ZombieNautilusVariant.NETWORK_TYPE);
+    }
+
     public static Entry<Holder<PaintingVariant>> PaintingVariant(Holder<PaintingVariant> value) {
         return new MetadataImpl.EntryImpl<>(TYPE_PAINTING_VARIANT, value, PaintingVariant.NETWORK_TYPE);
     }
@@ -183,12 +176,16 @@ public final class Metadata {
         return new MetadataImpl.EntryImpl<>(TYPE_VECTOR3, value, NetworkBuffer.VECTOR3);
     }
 
-    public static Entry<float[]> Quaternion(float [] value) {
+    public static Entry<float[]> Quaternion(float[] value) {
         return new MetadataImpl.EntryImpl<>(TYPE_QUATERNION, value, NetworkBuffer.QUATERNION);
     }
 
     public static Entry<ResolvableProfile> ResolvableProfile(ResolvableProfile value) {
         return new MetadataImpl.EntryImpl<>(TYPE_RESOLVABLE_PROFILE, value, ResolvableProfile.NETWORK_TYPE);
+    }
+
+    public static Entry<MainHand> MainHand(MainHand value) {
+        return new MetadataImpl.EntryImpl<>(TYPE_MAIN_HAND, value, MainHand.NETWORK_TYPE);
     }
 
     private static final AtomicInteger NEXT_ID = new AtomicInteger(0);
@@ -221,6 +218,7 @@ public final class Metadata {
     public static final byte TYPE_FROG_VARIANT = nextId();
     public static final byte TYPE_PIG_VARIANT = nextId();
     public static final byte TYPE_CHICKEN_VARIANT = nextId();
+    public static final byte TYPE_ZOMBIE_NAUTILUS_VARIANT = nextId();
     public static final byte TYPE_OPT_GLOBAL_POSITION = nextId(); // Unused by protocol it seems
     public static final byte TYPE_PAINTING_VARIANT = nextId();
     public static final byte TYPE_SNIFFER_STATE = nextId();
@@ -230,6 +228,7 @@ public final class Metadata {
     public static final byte TYPE_VECTOR3 = nextId();
     public static final byte TYPE_QUATERNION = nextId();
     public static final byte TYPE_RESOLVABLE_PROFILE = nextId();
+    public static final byte TYPE_MAIN_HAND = nextId();
 
     // Impl Note: Adding an entry here requires that a default value entry is added in MetadataImpl.EMPTY_VALUES
 
@@ -237,13 +236,11 @@ public final class Metadata {
         return (byte) NEXT_ID.getAndIncrement();
     }
 
-    public sealed interface Entry<T> permits MetadataImpl.EntryImpl {
-        @SuppressWarnings({"unchecked", "rawtypes"})
-        NetworkBuffer.Type<Entry<?>> SERIALIZER = (NetworkBuffer.Type) MetadataImpl.EntryImpl.SERIALIZER;
+    public sealed interface Entry<T extends @UnknownNullability Object> permits MetadataImpl.EntryImpl {
+        NetworkBuffer.Type<Entry<?>> SERIALIZER = MetadataImpl.EntryImpl.SERIALIZER;
 
         int type();
 
-        @UnknownNullability
         T value();
     }
 }

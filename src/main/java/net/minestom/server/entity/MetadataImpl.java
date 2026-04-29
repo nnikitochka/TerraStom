@@ -10,6 +10,11 @@ import net.minestom.server.entity.metadata.animal.tameable.WolfVariant;
 import net.minestom.server.entity.metadata.golem.CopperGolemMeta;
 import net.minestom.server.entity.metadata.other.PaintingVariant;
 import net.minestom.server.entity.metadata.villager.VillagerMeta;
+import net.minestom.server.entity.metadata.animal.ChickenVariant;
+import net.minestom.server.entity.metadata.animal.CowVariant;
+import net.minestom.server.entity.metadata.animal.PigVariant;
+import net.minestom.server.entity.metadata.animal.ZombieNautilusVariant;
+import net.minestom.server.entity.metadata.animal.tameable.WolfSoundVariant;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.network.NetworkBuffer;
@@ -50,8 +55,13 @@ final class MetadataImpl {
         EMPTY_VALUES.set(TYPE_OPT_VARINT, OptVarInt(null));
         EMPTY_VALUES.set(TYPE_POSE, Pose(EntityPose.STANDING));
         EMPTY_VALUES.set(TYPE_CAT_VARIANT, CatVariant(CatVariant.TABBY));
+        EMPTY_VALUES.set(TYPE_COW_VARIANT, CowVariant(CowVariant.TEMPERATE));
         EMPTY_VALUES.set(TYPE_WOLF_VARIANT, WolfVariant(WolfVariant.PALE));
+        EMPTY_VALUES.set(TYPE_WOLF_SOUND_VARIANT, WolfSoundVariant(WolfSoundVariant.CLASSIC));
         EMPTY_VALUES.set(TYPE_FROG_VARIANT, FrogVariant(FrogVariant.TEMPERATE));
+        EMPTY_VALUES.set(TYPE_PIG_VARIANT, PigVariant(PigVariant.TEMPERATE));
+        EMPTY_VALUES.set(TYPE_CHICKEN_VARIANT, ChickenVariant(ChickenVariant.TEMPERATE));
+        EMPTY_VALUES.set(TYPE_ZOMBIE_NAUTILUS_VARIANT, ZombieNautilusVariant(ZombieNautilusVariant.TEMPERATE));
         // OptGlobalPos
         EMPTY_VALUES.set(TYPE_PAINTING_VARIANT, PaintingVariant(PaintingVariant.KEBAB));
         EMPTY_VALUES.set(TYPE_SNIFFER_STATE, SnifferState(SnifferMeta.State.IDLING));
@@ -61,21 +71,23 @@ final class MetadataImpl {
         EMPTY_VALUES.set(TYPE_VECTOR3, Vector3(Vec.ZERO));
         EMPTY_VALUES.set(TYPE_QUATERNION, Quaternion(new float[]{0, 0, 0, 0}));
         EMPTY_VALUES.set(TYPE_RESOLVABLE_PROFILE, ResolvableProfile(ResolvableProfile.EMPTY));
+        EMPTY_VALUES.set(TYPE_MAIN_HAND, MainHand(MainHand.RIGHT));
         EMPTY_VALUES.trim();
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    record EntryImpl<T>(int type, @UnknownNullability T value,
+    record EntryImpl<T extends @UnknownNullability Object>(int type, T value,
                         NetworkBuffer.Type<T> serializer) implements Metadata.Entry<T> {
-        static final NetworkBuffer.Type<EntryImpl<?>> SERIALIZER = new NetworkBuffer.Type<>() {
+        static final NetworkBuffer.Type<Entry<?>> SERIALIZER = new NetworkBuffer.Type<>() {
             @Override
-            public void write(NetworkBuffer buffer, EntryImpl value) {
-                buffer.write(VAR_INT, value.type);
-                buffer.write(value.serializer, value.value);
+            public void write(NetworkBuffer buffer, Entry value) {
+                final EntryImpl impl = (EntryImpl) value;
+                buffer.write(VAR_INT, impl.type);
+                buffer.write(impl.serializer, impl.value);
             }
 
             @Override
-            public EntryImpl read(NetworkBuffer buffer) {
+            public Entry read(NetworkBuffer buffer) {
                 final int type = buffer.read(VAR_INT);
                 final EntryImpl<?> value = (EntryImpl<?>) EMPTY_VALUES.get(type);
                 if (value == null) throw new UnsupportedOperationException("Unknown value type: " + type);

@@ -5,6 +5,7 @@ import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.object.ObjectContents;
 import net.minestom.demo.entity.PlayerEntity;
 import net.minestom.server.FeatureFlag;
@@ -211,6 +212,12 @@ public class PlayerInit {
                     )));
                 }
             })
+            .addListener(PlayerGameModeRequestEvent.class, event -> {
+                final Player player = event.getPlayer();
+                if (player.getPermissionLevel() >= 2) {
+                    player.setGameMode(event.getRequestedGameMode());
+                }
+            })
             .addListener(PlayerChatEvent.class, event -> {
                 var dialog = new Dialog.MultiAction(
                         new DialogMetadata(
@@ -385,6 +392,23 @@ public class PlayerInit {
                         .stream()
                         .map(Component::text)
                         .forEach(comp -> event.getPlayer().sendMessage(comp));
+            })
+            .addListener(PlayerInputEvent.class, event -> {
+                event.getPlayer().sendActionBar(Component.empty()
+                        .append(Component.keybind("key.left").color(event.isHoldingLeftKey() ? NamedTextColor.GREEN : NamedTextColor.RED))
+                        .append(Component.text(" "))
+                        .append(Component.keybind("key.forward").color(event.isHoldingForwardKey() ? NamedTextColor.GREEN : NamedTextColor.RED))
+                        .append(Component.text(" "))
+                        .append(Component.keybind("key.back").color(event.isHoldingBackwardKey() ? NamedTextColor.GREEN : NamedTextColor.RED))
+                        .append(Component.text(" "))
+                        .append(Component.keybind("key.right").color(event.isHoldingRightKey() ? NamedTextColor.GREEN : NamedTextColor.RED))
+                        .append(Component.text(" | "))
+                        .append(Component.keybind("key.jump").color(event.isHoldingJumpKey() ? NamedTextColor.GREEN : NamedTextColor.RED))
+                        .append(Component.text(" "))
+                        .append(Component.keybind("key.sneak").color(event.isHoldingShiftKey() ? NamedTextColor.GREEN : NamedTextColor.RED))
+                        .append(Component.text(" "))
+                        .append(Component.keybind("key.sprint").color(event.isHoldingSprintKey() ? NamedTextColor.GREEN : NamedTextColor.RED))
+                );
             });
 
     {

@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.ToNumberPolicy;
 import com.google.gson.stream.JsonReader;
-import net.kyori.adventure.key.InvalidKeyException;
 import net.kyori.adventure.key.Key;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.codec.Result;
@@ -12,16 +11,18 @@ import net.minestom.server.codec.Transcoder;
 import net.minestom.server.collision.BoundingBox;
 import net.minestom.server.collision.CollisionUtils;
 import net.minestom.server.collision.Shape;
+import net.minestom.server.collision.ShapeImpl;
 import net.minestom.server.component.DataComponent;
 import net.minestom.server.component.DataComponentMap;
 import net.minestom.server.component.DataComponents;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.EquipmentSlot;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.instance.block.BlockEntityType;
 import net.minestom.server.instance.block.BlockSoundType;
 import net.minestom.server.item.Material;
-import net.minestom.server.item.component.CustomData;
 import net.minestom.server.item.component.Equippable;
+import net.minestom.server.item.component.TypedCustomData;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.utils.Either;
 import net.minestom.server.utils.collection.ObjectArray;
@@ -211,7 +212,9 @@ public final class RegistryData {
         TRIM_MATERIALS("trim_material.json"),
         TRIM_PATTERNS("trim_pattern.json"),
         WOLF_VARIANTS("wolf_variant.json"),
-        WOLF_SOUND_VARIANTS("wolf_sound_variant.json");
+        WOLF_SOUND_VARIANTS("wolf_sound_variant.json"),
+        ZOMBIE_NAUTILUS_VARIANTS("zombie_nautilus_variant.json"),
+        TIMELINES("timeline.json");
 
         private final String name;
 
@@ -251,8 +254,8 @@ public final class RegistryData {
         private final float jumpFactor;
         private final byte packedFlags;
         private final byte lightEmission;
-        private final @Nullable Key blockEntity;
-        private final int blockEntityId;
+        private final byte lightBlocked;
+        private final @Nullable BlockEntityType blockEntityType;
         private final @Nullable Material material;
         private final @Nullable BlockSoundType blockSoundType;
         private final Shape collisionShape;
@@ -275,6 +278,7 @@ public final class RegistryData {
             var occludes = fromParent(parent, BlockEntry::occludes, main, "occludes", Properties::getBoolean, true);
             var requiresTool = fromParent(parent, BlockEntry::requiresTool, main, "requiresTool", Properties::getBoolean, true);
             this.lightEmission = fromParent(parent, BlockEntry::lightEmission, main, "lightEmission", Properties::getInt, 0).byteValue();
+            this.lightBlocked = fromParent(parent, BlockEntry::lightBlocked, main, "lightBlock", Properties::getInt, 0).byteValue();
             var replaceable = fromParent(parent, BlockEntry::isReplaceable, main, "replaceable", Properties::getBoolean, false);
             this.blockSoundType = fromParent(parent, BlockEntry::getBlockSoundType, main, "soundType", (properties, string) -> {
                 final String soundTypeKey = properties.getString(string);
@@ -282,9 +286,10 @@ public final class RegistryData {
             }, null);
             {
                 final Properties blockEntity = main.section("blockEntity");
-                final Key blockEntityKey = fromParent(parent, BlockEntry::blockEntity, blockEntity, "namespace", (properties, string) -> Key.key(properties.getString(string)), null);
-                this.blockEntity = blockEntityKey != null ? (Key) internCache.computeIfAbsent(blockEntityKey, key -> blockEntityKey) : null;
-                this.blockEntityId = fromParent(parent, BlockEntry::blockEntityId, blockEntity, "id", Properties::getInt, 0);
+                this.blockEntityType = fromParent(
+                        parent, BlockEntry::blockEntityType, blockEntity, "namespace",
+                        (properties, string) -> BlockEntityType.fromKey(properties.getString(string)),
+                        null);
             }
             {
                 this.material = fromParent(parent, BlockEntry::material, main, "correspondingItem", (properties, string) -> {
@@ -297,17 +302,21 @@ public final class RegistryData {
                     String shape = properties.getString(string);
                     return CollisionUtils.parseCollisionShape(internCache, shape);
                 }, null);
-                this.occlusionShape = fromParent(parent, BlockEntry::occlusionShape, main, "occlusionShape", (properties, string) -> {
+                Shape occludeShape = fromParent(parent, BlockEntry::occlusionShape, main, "occlusionShape", (properties, string) -> {
                     String shape = properties.getString(string);
                     if (parent == null || parentProperties == null) // No parent, so we can just parse the shape
                         return CollisionUtils.parseOcclusionShape(internCache, shape, occludes, this.lightEmission);
-                    // TODO make this condition just change the condition; like adding lightData if emission just changes.
-                    if (shape != null || occludes != parent.occludes() || this.lightEmission != parent.lightEmission) {
+                    if (shape != null || occludes != parent.occludes()) {
                         if (shape == null) shape = parentProperties.getString(string);
                         return CollisionUtils.parseOcclusionShape(internCache, shape, occludes, this.lightEmission);
                     }
                     return parent.occlusionShape();
                 }, null);
+                // Apply possible lightEmission override, since that isn't specified in occlusionShape
+                if (parent != null && this.lightEmission != parent.lightEmission && occludeShape instanceof ShapeImpl shapeImpl) {
+                    occludeShape = shapeImpl.withLightEmission(this.lightEmission);
+                }
+                this.occlusionShape = occludeShape;
             }
             var redstoneConductor = fromParent(parent, BlockEntry::isRedstoneConductor, main, "redstoneConductor", Properties::getBoolean, null);
             var signalSource = fromParent(parent, BlockEntry::isSignalSource, main, "signalSource", Properties::getBoolean, false);
@@ -402,20 +411,36 @@ public final class RegistryData {
             return lightEmission;
         }
 
+        public int lightBlocked() {
+            return lightBlocked;
+        }
+
         public boolean isReplaceable() {
             return (packedFlags & REPLACEABLE_OFFSET) != 0;
         }
 
         public boolean isBlockEntity() {
-            return blockEntity != null;
+            return blockEntityType != null;
         }
 
+        public @Nullable BlockEntityType blockEntityType() {
+            return blockEntityType;
+        }
+
+        /**
+         * @deprecated Use {@link #blockEntityType}
+         */
+        @Deprecated
         public @Nullable Key blockEntity() {
-            return blockEntity;
+            return blockEntityType != null ? blockEntityType.key() : null;
         }
 
+        /**
+         * @deprecated Use {@link #blockEntityType}
+         */
+        @Deprecated
         public int blockEntityId() {
-            return blockEntityId;
+            return blockEntityType != null ? blockEntityType.id() : -1;
         }
 
         public @Nullable Material material() {
@@ -519,12 +544,8 @@ public final class RegistryData {
          */
         @Deprecated(forRemoval = true)
         public @Nullable EntityType spawnEntityType() {
-            CustomData entityData = prototype().get(DataComponents.ENTITY_DATA, CustomData.EMPTY);
-            try {
-                return EntityType.fromKey(entityData.nbt().getString("id"));
-            } catch (InvalidKeyException ignored) {
-                return null;
-            }
+            TypedCustomData<EntityType> entityData = prototype().get(DataComponents.ENTITY_DATA);
+            return entityData == null ? null : entityData.type();
         }
     }
 
