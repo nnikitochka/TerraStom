@@ -150,6 +150,7 @@ public class Player extends LivingEntity implements CommandSender, HoverEventSou
     private Instance pendingInstance = null;
     private int dimensionTypeId;
     private GameMode gameMode;
+    protected GameMode previousGameMode;
     private WorldPos deathLocation;
 
     /**
@@ -252,6 +253,7 @@ public class Player extends LivingEntity implements CommandSender, HoverEventSou
         refreshAnswerKeepAlive(true);
 
         this.gameMode = GameMode.SURVIVAL;
+        this.previousGameMode = gameMode;
         this.dimensionTypeId = DIMENSION_TYPE_REGISTRY.getId(DimensionType.OVERWORLD); // Default dimension
         this.levelFlat = true;
         getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.1);
@@ -291,7 +293,7 @@ public class Player extends LivingEntity implements CommandSender, HoverEventSou
                 ServerFlag.CHUNK_VIEW_DISTANCE, ServerFlag.CHUNK_VIEW_DISTANCE,
                 false, true, false,
                 dimensionTypeId, spawnInstance.getDimensionName(), 0,
-                gameMode, null, false, levelFlat,
+                gameMode, previousGameMode, false, levelFlat,
                 deathLocation, portalCooldown, DEFAULT_SEA_LEVEL,
                 true);
         sendPacket(joinGamePacket);
@@ -497,7 +499,7 @@ public class Player extends LivingEntity implements CommandSender, HoverEventSou
         refreshHealth();
 
         sendPacket(new RespawnPacket(dimensionTypeId, instance.getDimensionName(),
-                0, gameMode, gameMode, false, levelFlat,
+                0, gameMode, previousGameMode, false, levelFlat,
                 deathLocation, portalCooldown, DEFAULT_SEA_LEVEL, (byte) RespawnPacket.COPY_ALL));
         refreshClientStateAfterRespawn();
 
@@ -1218,7 +1220,7 @@ public class Player extends LivingEntity implements CommandSender, HoverEventSou
         final PlayerInfoUpdatePacket addPlayerPacket = getAddPlayerToList();
 
         final RespawnPacket respawnPacket = new RespawnPacket(dimensionTypeId,
-                instance.getDimensionName(), 0, gameMode, gameMode,
+                instance.getDimensionName(), 0, gameMode, previousGameMode,
                 false, levelFlat, deathLocation, portalCooldown,
                 DEFAULT_SEA_LEVEL, (byte) RespawnPacket.COPY_ALL);
 
