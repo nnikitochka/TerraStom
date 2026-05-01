@@ -126,7 +126,7 @@ public class Entity implements Viewable, Tickable, Schedulable, Snapshotable, Ev
     protected boolean onGround;
 
     protected BoundingBox boundingBox;
-    private PhysicsResult previousPhysicsResult = null;
+    protected PhysicsResult previousPhysicsResult = null;
 
     protected Entity vehicle;
 
