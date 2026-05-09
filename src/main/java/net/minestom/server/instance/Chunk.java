@@ -297,6 +297,7 @@ public abstract class Chunk implements Block.Getter, Block.Setter, Biome.Getter,
         return tagHandler;
     }
 
+    protected void onUnload() {}
     /**
      * Sets the chunk as "unloaded".
      */
