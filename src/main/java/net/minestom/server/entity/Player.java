@@ -1293,6 +1293,8 @@ public class Player extends LivingEntity implements OfflinePlayer, CommandSender
 
         getInventory().update();
         teleport(getPosition());
+        if (!getPassengers().isEmpty())
+            this.sendPacket(getPassengersPacket());
     }
 
     @Override
