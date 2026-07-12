@@ -130,6 +130,7 @@ public abstract class Instance implements Block.Getter, Block.Setter, Biome.Gett
     protected TagHandler tagHandler = TagHandler.newHandler();
     private final Scheduler scheduler = Scheduler.newScheduler();
     private final EventNode<InstanceEvent> eventNode;
+    private final Registries registries;
 
     // the explosion supplier
     private ExplosionSupplier explosionSupplier;
@@ -161,6 +162,7 @@ public abstract class Instance implements Block.Getter, Block.Setter, Biome.Gett
      * @param dimensionType the {@link DimensionType} of the instance
      */
     public Instance(Registries registries, UUID uuid, RegistryKey<DimensionType> dimensionType, Key dimensionName) {
+        this.registries = registries;
         this.uuid = uuid;
         this.dimensionType = dimensionType;
         this.cachedDimensionType = registries.dimensionType().get(dimensionType);
@@ -181,6 +183,15 @@ public abstract class Instance implements Block.Getter, Block.Setter, Biome.Gett
             // Local nodes require a server process
             this.eventNode = null;
         }
+    }
+
+    /**
+     * Gets the registries used by this instance.
+     *
+     * @return the registries
+     */
+    public Registries registries() {
+        return registries;
     }
 
     /**
@@ -887,7 +898,12 @@ public abstract class Instance implements Block.Getter, Block.Setter, Biome.Gett
      * @param newViewDistance the new view distance
      */
     public void viewDistance(int newViewDistance) {
+        final int oldViewDistance = this.chunkViewDistance;
+        if (oldViewDistance == newViewDistance) return;
         this.chunkViewDistance = newViewDistance;
+        for (Player player : getPlayers()) {
+            player.updateViewDistance(oldViewDistance, newViewDistance);
+        }
     }
 
     /**

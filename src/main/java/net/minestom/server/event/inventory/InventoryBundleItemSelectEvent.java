@@ -33,7 +33,7 @@ public class InventoryBundleItemSelectEvent implements InventoryEvent, PlayerIns
     }
 
     /**
-     * Returns the modified slot, relative to {@link #getInventory}
+     * Returns the modified slot, relative to {@link #getInventory()}
      */
     public int getSlot() {
         return this.slot;
