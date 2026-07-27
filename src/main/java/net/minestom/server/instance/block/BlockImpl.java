@@ -27,21 +27,26 @@ record BlockImpl(RegistryData.BlockEntry registry,
                  @Nullable BlockHandler handler) implements Block {
     private final static Logger LOGGER = LoggerFactory.getLogger(BlockImpl.class);
 
-    @Override
-    public @Nullable BlockHandler handler() {
-        if (handler != null) return handler;
+    public BlockImpl {
+        if (handler == null) {
+            handler = resolveHandler();
+        }
+    }
+
+    private @Nullable BlockHandler resolveHandler() {
+        final var blockKey = registry.key().toString();
 
         if (nbt != null) {
             var tagHandlerKey = nbt.getString(BlockManager.TAG_HANDLER_ID_KEY, null);
 
             if (tagHandlerKey != null) {
-                var tagHandler = MinecraftServer.getBlockManager().getTagHandler(registry.key().toString(), tagHandlerKey);
+                var tagHandler = MinecraftServer.getBlockManager().getTagHandler(blockKey, tagHandlerKey);
                 if (tagHandler != null) return tagHandler;
                 LOGGER.warn("У блока {} есть тег обработчика, но обработчик с ключом {} для этого тега не зарегистрирован!", name(), tagHandlerKey);
             }
         }
 
-        return MinecraftServer.getBlockManager().getDefaultHandler(registry.key().toString());
+        return MinecraftServer.getBlockManager().getDefaultHandler(blockKey);
     }
 
     /**
