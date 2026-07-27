@@ -28,6 +28,7 @@ public final class BlockManager {
     public static final Tag<String> TAG_HANDLER_ID_TAG = Tag.String(TAG_HANDLER_ID_KEY);
     // block id -> block placement rule
     private final Int2ObjectMap<BlockPlacementRule> placementRuleMap = new Int2ObjectOpenHashMap<>();
+    // block id -> map handler id to block placement rule
     private final Int2ObjectMap<Map<String, BlockPlacementRule>> tagPlacementRuleMap = new Int2ObjectOpenHashMap<>();
 
     private final Set<String> dummyWarning = ConcurrentHashMap.newKeySet(); // Prevent warning spam
