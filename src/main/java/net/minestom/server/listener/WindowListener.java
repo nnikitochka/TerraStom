@@ -1,5 +1,6 @@
 package net.minestom.server.listener;
 
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventDispatcher;
@@ -20,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class WindowListener {
 
+    @SuppressWarnings("LabelledBreakTarget")
     public static void clickWindowListener(ClientClickWindowPacket packet, Player player) {
         final int windowId = packet.windowId();
         final boolean playerInventory = windowId == 0;
@@ -74,7 +76,7 @@ public class WindowListener {
 
         // Resync in case the client sent item does not match what we think it should be.
         ItemStack cursorItem = player.getInventory().getCursorItem();
-        if (!ItemStack.Hash.of(cursorItem).equals(packet.clickedItem()))
+        if (!ItemStack.Hash.of(cursorItem, MinecraftServer.process()).equals(packet.clickedItem()))
             player.sendPacket(new SetCursorItemPacket(cursorItem));
     }
 
