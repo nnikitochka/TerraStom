@@ -120,8 +120,8 @@ import java.util.function.UnaryOperator;
 public class Player extends LivingEntity implements OfflinePlayer, CommandSender, HoverEventSource<ShowEntity>, NamedAndIdentified {
     private static final DynamicRegistry<DimensionType> DIMENSION_TYPE_REGISTRY = MinecraftServer.getDimensionTypeRegistry();
 
-    protected static Component REMOVE_MESSAGE = Component.text("You have been removed from the server without reason.", NamedTextColor.RED);
-    protected static Component MISSING_REQUIRED_RESOURCE_PACK = Component.text("Required resource pack was not loaded.", NamedTextColor.RED);
+    protected static Component removeMessage = Component.text("You have been removed from the server without reason.", NamedTextColor.RED);
+    protected static Component missingRequiredResourcePack = Component.text("Required resource pack was not loaded.", NamedTextColor.RED);
 
     // Adventure pointer supplier
     protected static final PointersSupplier<Player> PLAYER_POINTERS_SUPPLIER = PointersSupplier.<Player>builder()
@@ -603,7 +603,7 @@ public class Player extends LivingEntity implements OfflinePlayer, CommandSender
         super.remove(permanent);
         // Prevent the player from being stuck in loading screen, or just unable to interact with the server
         // This should be considered as a bug, since the player will ultimately time out anyway.
-        if (permanent && playerConnection.isOnline()) kick(REMOVE_MESSAGE);
+        if (permanent && playerConnection.isOnline()) kick(removeMessage);
     }
 
     @Override
@@ -1433,7 +1433,7 @@ public class Player extends LivingEntity implements OfflinePlayer, CommandSender
 
             // If the resource pack is required and failed to load, bye bye!
             if (pendingPack.required() && status != ResourcePackStatus.SUCCESSFULLY_LOADED) {
-                kick(MISSING_REQUIRED_RESOURCE_PACK);
+                kick(missingRequiredResourcePack);
             }
 
             if (pendingResourcePacks.isEmpty() && resourcePackFuture != null) {
