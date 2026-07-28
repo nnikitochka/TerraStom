@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Contains all the data required to store a skin.
  * <p>
- * Can be applied to a player with {@link Player#setSkin(PlayerSkin)}
+ * Can be applied to a player with {@link Player#setSkin(PlayerSkin, boolean)}
  * or in the linked event {@link net.minestom.server.event.player.PlayerSkinInitEvent}.
  */
 public record PlayerSkin(String textures, String signature) {
