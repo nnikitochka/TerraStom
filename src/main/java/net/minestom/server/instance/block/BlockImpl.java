@@ -35,7 +35,8 @@ record BlockImpl(RegistryData.BlockEntry registry,
     }
 
     private @Nullable BlockHandler resolveHandler() {
-        final var blockKey = registry.key().toString();
+        if (registry == null) return null;
+        final var blockKey = key().toString();
 
         if (nbt != null) {
             var tagHandlerKey = nbt.getString(BlockManager.TAG_HANDLER_ID_KEY, null);
