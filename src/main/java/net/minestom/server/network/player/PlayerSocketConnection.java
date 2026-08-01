@@ -360,6 +360,14 @@ public class PlayerSocketConnection extends PlayerConnection {
                     PlayerPacketOutEvent event = new PlayerPacketOutEvent(player, serverPacket);
                     outgoing.call(event);
                     if (event.isCancelled()) return true;
+
+                    if (event.isPacketReplaced()) {
+                        final int compressionThreshold = compressed ? MinecraftServer.getCompressionThreshold() : 0;
+                        var nextState = PacketVanilla.nextServerState(event.getPacket(), state);
+                        if (nextState != state) setServerState(nextState);
+                        PacketWriting.writeFramedPacket(buffer, state, event.getPacket(), compressionThreshold);
+                        return true;
+                    }
                 }
             }
             // Translation

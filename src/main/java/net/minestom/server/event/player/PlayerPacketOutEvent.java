@@ -5,6 +5,8 @@ import net.minestom.server.event.trait.CancellableEvent;
 import net.minestom.server.event.trait.PlayerEvent;
 import net.minestom.server.network.packet.server.ServerPacket;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Listen to outgoing packets asynchronously.
@@ -14,11 +16,13 @@ import org.jetbrains.annotations.ApiStatus;
 @ApiStatus.Experimental
 public class PlayerPacketOutEvent implements PlayerEvent, CancellableEvent {
     private final Player player;
-    private final ServerPacket packet;
+    private final ServerPacket originalPacket;
+    private ServerPacket packet;
     private boolean cancelled;
 
     public PlayerPacketOutEvent(Player player, ServerPacket packet) {
         this.player = player;
+        this.originalPacket = packet;
         this.packet = packet;
     }
 
@@ -29,6 +33,18 @@ public class PlayerPacketOutEvent implements PlayerEvent, CancellableEvent {
 
     public ServerPacket getPacket() {
         return packet;
+    }
+
+    public void setPacket(ServerPacket packet) {
+        this.packet = packet;
+    }
+
+    public boolean isPacketReplaced() {
+        return packet != originalPacket;
+    }
+
+    public ServerPacket getOriginalPacket() {
+        return originalPacket;
     }
 
     @Override
